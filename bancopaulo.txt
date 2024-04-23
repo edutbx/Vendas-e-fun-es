@@ -1,0 +1,70 @@
+create database mercado;
+
+use mercado;
+
+create table estoquemercado(
+codigoproduto int primary key auto_increment,
+nomeproduto varchar(100) not null,
+precocompra numeric(9,2) not null,
+precovenda decimal(9,2) not null,
+quantidadeproduto int not null,
+datacompra date
+);
+
+create table vendamercado(
+codigovenda int primary key auto_increment,
+datavenda date,
+quantidadevenda int,
+vendaestoque int,
+foreign key(vendaestoque) references estoquemercado(codigoproduto)
+);
+
+insert into estoquemercado (nomeproduto, precocompra, precovenda, quantidadeproduto, datacompra) values
+('TESTE', 20, 30, 40, 20230417);
+
+select * from estoquemercado;
+
+create table login(
+id int primary key auto_increment,
+usuario varchar(100) not null,
+senha varchar(100) not null
+);
+
+insert into login values
+(1, 'admin', 'admin');
+
+
+select * from login;
+
+delimiter $
+CREATE TRIGGER tgr_novavenda AFTER INSERT ON vendamercado
+FOR EACH ROW
+  BEGIN
+    UPDATE estoquemercado SET 
+    quantidadeproduto = quantidadeproduto - NEW.quantidadevenda
+    WHERE codigoproduto = NEW.vendaestoque;
+  END $
+DELIMITER ;
+
+delimiter $
+    CREATE TRIGGER tgr_desfazervenda AFTER DELETE ON vendamercado
+FOR EACH ROW
+  BEGIN
+    UPDATE estoquemercado SET 
+    quantidadeproduto = quantidadeproduto + OLD.quantidadevenda
+    WHERE codigoproduto = OLD.vendaestoque;
+  END $
+delimiter ;
+
+insert into vendamercado (datavenda, quantidadevenda, vendaestoque) 
+values('20230417', 10, 1);
+
+select * from vendamercado;
+select * from estoquemercado;
+
+ 
+
+
+
+
+
